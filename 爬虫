@@ -1,0 +1,33 @@
+from bs4 import BeautifulSoup#导入BeautifulSoup，requests，pandas库
+import requests
+from pandas import DataFrame,Series
+url='http://www.xuetangx.com/courses?cid=117'#原网页
+wb_data=requests.get(url)#向服务器发出请求，得到结果
+soup=BeautifulSoup(wb_data.text,'lxml')#解析网页
+classnames=soup.select("#list_style > li > div > div.fl.list_inner_right.cf > div > a > h2")#爬取信息路径
+teachers=soup.select("#list_style > li > div > div.fl.list_inner_right.cf > div > div.cf.teacher > div.fl.name > ul > li:nth-of-type(1)")
+mushis=soup.select("#list_style > li > div > div.fl.list_inner_right.cf > div > div.coursename_ref > span:nth-of-type(1)")
+states=soup.select("#list_style > li > div > div.fl.list_inner_right.cf > div > div.cf.teacher > div.fl.name > ul > li:nth-of-type(2) > span")
+numbers=soup.select("#list_style > li > div > div.fl.list_inner_right.cf > div > div.cf.teacher > div.fl.name > ul > li:nth-of-type(3) > span")
+jianjies=soup.select("#list_style > li > div > div.fl.list_inner_right.cf > div > div.txt_all")
+ts=soup.select("#list_style > li > div > div.fl.list_inner_right.cf > div > div.coursename_ref > span:nth-of-type(2)")
+
+data={}
+ls= []#建列表
+
+
+#把所有爬取信息放入列表
+for classname,t,teacher,mushi,state,number,jianjie in zip(classnames,ts,teachers,mushis,states,numbers,jianjies):
+    data={
+        '课程名称' : classname.get_text(),
+        '国家精品':t.get_text(),
+        '教师信息':teacher.get_text(),
+        '模式':mushi.get_text(),
+        '状态':state.get_text(
+        '人数':number.get_text(),
+        '简介':jianjie.get_text(),       
+    }
+    
+    ls.append(data)#存入列表
+    dt1=DataFrame(ls,columns=['课程名称','模式','国家精品','教师信息','状态','人数','简介'])#表格形式，以所给索引方式打印结果
+    
