@@ -1,0 +1,45 @@
+from selenium import webdriver#导入selenium，Beautifulsoup,pandas库
+from bs4 import BeautifulSoup
+import pandas as pd
+from pandas import DataFrame,Series
+driver1 = webdriver.PhantomJS(executable_path='D:/phantomjs/bin/phantomjs.exe')#选择浏览器
+driver1.implicitly_wait(10) # 等待页面加载（不然可能模拟点击报错）
+driver1.get("https://www.icourse163.org/course/BIT-268001")#请求网页
+myDynamicElement = driver1.find_element_by_css_selector("#review-tag-button").click()#模拟点击
+soup1 = BeautifulSoup(driver1.page_source, 'lxml')#解析网页
+a=soup1.select('#comment-section > div > div.ux-mooc-comment-course-comment_head > div.ux-mooc-comment-course-comment_head_rating-scores > span')
+#综合评分
+b=soup1.select("#comment-section > div > div.ux-mooc-comment-course-comment_head > div.ux-mooc-comment-course-comment_head_rating-action > div.ux-mooc-comment-course-comment_head_rating-action_tips > span")
+#总评论数
+names=soup1.select('#comment-section > div > div.ux-mooc-comment-course-comment_comment-list > div > div.ux-mooc-comment-course-comment_comment-list_item_body > div.ux-mooc-comment-course-comment_comment-list_item_body_user-info > a')
+#用户名
+pingluns=soup1.select('#comment-section > div > div.ux-mooc-comment-course-comment_comment-list > div > div.ux-mooc-comment-course-comment_comment-list_item_body > div.ux-mooc-comment-course-comment_comment-list_item_body_content > span')
+#用户评论
+shijian1s=soup1.select('#comment-section > div > div.ux-mooc-comment-course-comment_comment-list > div > div.ux-mooc-comment-course-comment_comment-list_item_body > div.ux-mooc-comment-course-comment_comment-list_item_body_comment-info > div.ux-mooc-comment-course-comment_comment-list_item_body_comment-info_time')
+#发表时间
+shijian2s=soup1.select('#comment-section > div > div.ux-mooc-comment-course-comment_comment-list > div > div.ux-mooc-comment-course-comment_comment-list_item_body > div.ux-mooc-comment-course-comment_comment-list_item_body_comment-info > div.ux-mooc-comment-course-comment_comment-list_item_body_comment-info_term-sign')
+#开课时间
+g=soup1.select('div.ux-mooc-comment-course-comment_comment-list_item_body > div.ux-mooc-comment-course-comment_comment-list_item_body_user-info > span > div > div.star-point')
+# for k in g:
+#   print(len(k.select('i')))
+# #评论星级
+
+lst=[]
+
+for n,p,s1,s2,k in zip(names,pingluns,shijian1s,shijian2s,g):
+    data={
+        '用户名':n.get_text(),
+        '评论':p.get_text(),
+        '发表时间':s1.get_text(),
+        '开课时间':s2.get_text(),
+        '星级':len(k.select('i'))
+       
+        
+    }
+    
+    lst.append(data)#加入列表
+print(lst)
+dt=pd.DataFrame(lst,columns=['用户名','星级','评论','发表时间','开课时间'])
+
+
+    
