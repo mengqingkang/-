@@ -1,0 +1,98 @@
+# 抓取个人主页
+from selenium import webdriver#导入webdriver,BeautifulSoup,pandas,time库
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+url="https://www.icourse163.org/home.htm?userId=1718149#/home/course"
+driver=webdriver.PhantomJS(executable_path='D:/phantomjs/bin/phantomjs.exe')#选择浏览器
+driver.get(url)#请求网页
+soup=BeautifulSoup(driver.page_source,'lxml')#解析网页
+a= soup.select('div.u-ui-name > span')
+#用户名
+b=soup.select('div.u-ui-tag > span')
+#职业
+c=soup.select('div.u-ui-f2f > span > span')
+#关注人数
+#粉丝人数
+d=soup.select('div.u-ui-desc > span')
+#描述
+e=soup.select('div.u-ui-discuss-cont > span')
+#发帖数、回复数、评论数之和
+f=soup.select('div > div.u-ui-zan-cnt > span')
+#获得赞数之和 
+g=soup.select('div > div.u-ui-box.f-fr > div > div > div.u-ui-time-cont > span')
+#累计视频学习时间
+h=soup.select('div.item.u-st-course.current.ga-click > a > span')#课程数
+z=soup.select('div.item.u-st-cert.ga-click > a > span')#证书数#auto-id-1564649784176 > a > 
+
+data={
+    '用户名':a[0].get_text(),
+    '职业':b[0].get_text(),
+    '关注人数':c[0].get_text(),
+    '粉丝人数':c[1].get_text(),
+    '描述':d[0].get_text(),
+    '发帖数、回复数、评论数之和':e[0].get_text(),
+    '获得赞数之和':f[0].get_text(),
+    '累计视频学习时间':g[0].get_text()
+}
+print(data)
+
+print(h[0].get_text())
+lst=[]
+lst.append(data)#字典加入列表
+dt=pd.DataFrame(lst,columns=['用户名','职业','关注人数','粉丝人数','描述','发帖数、回复数、评论数之和','获得赞数之和','累计视频学习时间'])
+# time.sleep(2)#停两秒（这个地方容易爬不出来，多调试几次）
+
+course=soup.select('div > a > div.u-cc-courseFunc_div32 > span')#第一页课程
+
+
+if (int(h[0].get_text()[-2]) > 3):#判断是否有多页课程
+    lst1=[]
+    for i in range(3):
+        driver.implicitly_wait(10) # 等待页面加载（不然可能模拟点击报错）
+        myDynamicElement1 = driver.find_element_by_css_selector("li.pager_next > a").click()#模拟点击(下一页)
+        time.sleep(5)
+        soup1=BeautifulSoup(driver.page_source,'lxml')
+        course1=soup1.select('div > a > div.u-cc-courseFunc_div32 > span')#下一页课程
+        course=course+course1
+        time.sleep(2)
+    
+    for i in course:
+        lst1.append(i.get_text())
+    print(lst1)
+else:
+    lst1=[]
+    for i in course:
+        lst1.append(i.get_text())
+    print(lst1)
+print(z[0].get_text())
+
+if (int(len(z[0].get_text()))>3):
+    driver.implicitly_wait(10) # 等待页面加载（不然可能模拟点击报错）
+    myDynamicElement2 = driver.find_element_by_css_selector("div.item.u-st-cert.ga-click > a > span").click()#模拟点击（证书）
+    time.sleep(2)
+    driver.implicitly_wait(10) # 等待页面加载（不然可能模拟点击报错）
+    myDynamicElement3 = driver.find_element_by_css_selector("div.ga-click.u-certCardNav-func_div5 > span").click()#模拟点击(优秀证书)
+    time.sleep(2)
+
+    soup2=BeautifulSoup(driver.page_source,'lxml')
+    z1=soup2.select('div > div.u-certCard-courseFunc_div16 > span')#获得优秀证书的课程
+    lst2=[]
+    for i in z1:
+        lst2.append(i.get_text())
+    print('优秀证书：')
+    print(lst2)
+
+    driver.implicitly_wait(10) # 等待页面加载（不然可能模拟点击报错）
+    myDynamicElement4 = driver.find_element_by_css_selector("div.ga-click.u-certCardNav-func_div8 > span").click()#模拟点击（合格证书）
+
+    time.sleep(2)
+
+    soup3=BeautifulSoup(driver.page_source,'lxml')
+    z2=soup3.find_all(class_='f-thide u-certCard-courseFunc_span17')#获得合格证书的课程
+    lst3=[]
+    for i in z2:
+        lst3.append(i.get_text())
+    print('合格证书：')
+    print(lst3)
+driver.close()#关闭浏览器
